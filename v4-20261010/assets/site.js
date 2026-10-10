@@ -54,6 +54,32 @@
     document.querySelectorAll('[data-top]').forEach(function (b) { b.addEventListener('click', function () { window.scrollTo({ top: 0, behavior: 'smooth' }); }); });
   }
 
+  /* ---------- Résumé: one PDF per portfolio focus, downloaded on click ---------- */
+  var RESUME = { brand: 'Agnes_Liu_Resume_Brand_Campaign_Designer.pdf', product: 'Agnes_Liu_Resume_Product_Designer.pdf', print: 'Agnes_Liu_Resume_Illustration_Print_Designer.pdf' };
+  function resumeFile() { var f = store.get('al-focus'); return RESUME[FOCI.indexOf(f) > -1 ? f : 'brand']; }
+  function syncResume() {
+    var name = resumeFile();
+    document.querySelectorAll('[data-resume]').forEach(function (a) { a.href = new URL(name, a.href).href; a.setAttribute('download', name); });
+  }
+  function initResume() {
+    syncResume();
+    document.querySelectorAll('[data-resume]').forEach(function (a) {
+      a.addEventListener('click', function (e) {
+        if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) { return; }
+        var name = resumeFile(), url = new URL(name, a.href);
+        if (url.origin === window.location.origin) { return; }
+        /* The download attribute is ignored across origins (the Cargo site loads files from GitHub Pages), so fetch the file and save it. */
+        e.preventDefault();
+        fetch(url.href).then(function (r) { if (!r.ok) { throw new Error('HTTP ' + r.status); } return r.blob(); }).then(function (blob) {
+          var real = window.document, tmp = real.createElement('a'), obj = URL.createObjectURL(blob);
+          tmp.href = obj; tmp.download = name; tmp.style.display = 'none';
+          real.body.appendChild(tmp); tmp.click();
+          setTimeout(function () { URL.revokeObjectURL(obj); tmp.remove(); }, 1500);
+        }).catch(function () { window.location.assign(url.href); });
+      });
+    });
+  }
+
   /* ---------- Cards ---------- */
   function card(id) {
     var D = window.AL, p = D.projects[id];
@@ -122,6 +148,7 @@
         els.labGrid.innerHTML = gridHTML(lab);
       }
       if (animate) { els.swaps.forEach(function (el) { el.classList.remove('swap'); void el.offsetWidth; el.classList.add('swap'); }); }
+      syncResume();
     };
     els.btns.forEach(function (b) {
       b.addEventListener('click', function () {
@@ -137,7 +164,7 @@
   function initFocusLinks() {
     document.querySelectorAll('[data-focus-link]').forEach(function (a) {
       a.addEventListener('click', function (e) {
-        var id = a.getAttribute('data-focus-link'); store.set('al-focus', id);
+        var id = a.getAttribute('data-focus-link'); store.set('al-focus', id); syncResume();
         if (window.ALHome) { e.preventDefault(); window.scrollTo({ top: 0, behavior: 'smooth' }); window.ALHome.pick(id); }
       });
     });
@@ -370,6 +397,6 @@
     } catch (e) {}
   }
 
-  var boot = function () { initTop(); initNav(); initHome(); initFocusLinks(); initWork(); initCase(); initSlides(); initScrollers(); initMotion(); initImages(); initHover(); initAutoCards(); };
+  var boot = function () { initTop(); initNav(); initResume(); initHome(); initFocusLinks(); initWork(); initCase(); initSlides(); initScrollers(); initMotion(); initImages(); initHover(); initAutoCards(); };
   if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', boot); } else { boot(); }
 })();

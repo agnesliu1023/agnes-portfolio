@@ -415,3 +415,15 @@ body.info-open .scrim { opacity: 1; visibility: visible; transition: opacity 0.4
 .it-link::after { content: "Jump to chapter ↓"; position: absolute; left: 12px; bottom: 12px; display: inline-flex; align-items: center; height: 30px; padding: 0 12px; border-radius: 999px; background: var(--blue); color: #FFFFFF; font: 500 var(--t1)/1 var(--f); opacity: 0.94; transition: background-color 0.2s ease; }
 .it-link:hover::after { background: var(--blue-h); }
 @media (max-width: 640px) { .it-link::after { content: "↓"; width: 30px; padding: 0; justify-content: center; left: 8px; bottom: 8px; } }
+
+/* ---------- Paintings: each work on its own ground, with a label beside it ---------- */
+.art { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: 24px; row-gap: 18px; align-items: end; padding-top: 16px; border-top: 1px solid var(--line); }
+.art + .art { margin-top: clamp(24px, 3vw, 48px); }
+.art-fig { grid-column: 1 / span 8; margin: 0; display: flex; justify-content: center; align-items: center; padding: clamp(20px, 4vw, 64px); background: var(--tile); }
+.art-fig .media-el { width: auto; max-width: 100%; max-height: min(80vh, 900px); background: transparent; box-shadow: 0 1px 2px rgba(17, 17, 17, 0.06), 0 10px 28px rgba(17, 17, 17, 0.08); }
+.art-txt { grid-column: 9 / span 4; display: grid; gap: 10px; align-content: end; }
+.art-txt .n { font-size: var(--t1); color: var(--mute); font-variant-numeric: tabular-nums; }
+.art-txt h2 { font-size: var(--t4); font-weight: 400; line-height: 1.12; letter-spacing: -0.015em; }
+.art-txt .m { font-size: var(--t1); line-height: 1.45; color: var(--mute); }
+.art-txt p:not(.m) { color: var(--ink-2); max-width: 32em; }
+@media (max-width: 899px) { .art-fig, .art-txt { grid-column: 1 / -1; } }

@@ -11,7 +11,8 @@
     'tcl-social.html': '/tcl-set-1', 'involution.html': '/involution-set',
     'chatez.html': '/%E8%81%8A%E6%98%93-1', 'rainnet.html': '/rainnet-set',
     'risd.html': '/risd-m-set', 'echoes.html': '/echoes-pattern-path-set',
-    'radiant.html': '/radiant-set', 'still-i-rise.html': '/still-i-rise-set'
+    'radiant.html': '/radiant-set', 'still-i-rise.html': '/still-i-rise-set',
+    'art.html': '/work_artpainting'
   };
   var aliases = {
     '': ['index.html'], 'work_campaign': ['index.html', 'brand'], 'work_branding': ['index.html', 'brand'],
@@ -24,7 +25,8 @@
     'tcl-social': ['tcl-social.html'], 'involution': ['involution.html'],
     'chatez': ['chatez.html'], '聊易': ['chatez.html'], 'rainnet': ['rainnet.html'],
     'risd': ['risd.html'], 'echoes': ['echoes.html'], 'radiant': ['radiant.html'],
-    'still-i-rise': ['still-i-rise.html']
+    'still-i-rise': ['still-i-rise.html'],
+    'art': ['art.html'], 'art-and-painting': ['art.html'], 'art-and-painting-descriptions': ['art.html']
   };
   function slug(s) { try { return decodeURIComponent(s.replace(/^\/+|\/+$/g, '')).toLowerCase(); } catch (e) { return s; } }
   Object.keys(canonical).forEach(function (file) { aliases[slug(canonical[file])] = [file]; aliases[file] = [file]; });
