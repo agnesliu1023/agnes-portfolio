@@ -79,7 +79,7 @@
     var root = host.attachShadow({ mode: 'open' });
     var style = document.createElement('style');
     style.textContent = ':host { all: initial; display: block; width: 100%; isolation: isolate; }\n' + results[1]
-      .replace(/:root\b/g, ':host').replace(/\bhtml\b/g, ':host').replace(/\bbody\b/g, '#al-page');
+      .replace(/:root\b/g, ':host').replace(/\bhtml\b/g, ':host').replace(/(^|[\s,{>+~])body(?=[\s.#:{>+~,]|$)/g, '$1#al-page');
     root.appendChild(style);
     var page = document.createElement('div'); page.id = 'al-page'; page.className = parsed.body.className;
     while (parsed.body.firstChild) page.appendChild(parsed.body.firstChild);
