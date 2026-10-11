@@ -12,7 +12,8 @@
     'chatez.html': '/%E8%81%8A%E6%98%93-1', 'rainnet.html': '/rainnet-set',
     'risd.html': '/risd-m-set', 'echoes.html': '/echoes-pattern-path-set',
     'radiant.html': '/radiant-set', 'still-i-rise.html': '/still-i-rise-set',
-    'art.html': '/work_artpainting'
+    'art.html': '/work_artpainting',
+    'floats.html': '/work_all?project=shanghai-tourism-festival-floats'
   };
   var aliases = {
     '': ['index.html'], 'work_campaign': ['index.html', 'brand'], 'work_branding': ['index.html', 'brand'],
@@ -26,11 +27,14 @@
     'chatez': ['chatez.html'], '聊易': ['chatez.html'], 'rainnet': ['rainnet.html'],
     'risd': ['risd.html'], 'echoes': ['echoes.html'], 'radiant': ['radiant.html'],
     'still-i-rise': ['still-i-rise.html'],
-    'art': ['art.html'], 'art-and-painting': ['art.html'], 'art-and-painting-descriptions': ['art.html']
+    'art': ['art.html'], 'art-and-painting': ['art.html'], 'art-and-painting-descriptions': ['art.html'],
+    '?shanghai-tourism-festival-floats': ['floats.html']
   };
   function slug(s) { try { return decodeURIComponent(s.replace(/^\/+|\/+$/g, '')).toLowerCase(); } catch (e) { return s; } }
   Object.keys(canonical).forEach(function (file) { aliases[slug(canonical[file])] = [file]; aliases[file] = [file]; });
-  var route = aliases[slug(location.pathname)];
+  /* Pages without their own Cargo page live at an existing Cargo URL with ?project=<name>. */
+  var project = new URLSearchParams(location.search).get('project');
+  var route = (project && aliases['?' + project.toLowerCase()]) || aliases[slug(location.pathname)];
   if (!route) return;
   window.__alV4Booted = true;
   if (route[1]) { try { sessionStorage.setItem('al-focus', route[1]); } catch (e) {} }
