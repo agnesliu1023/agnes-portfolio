@@ -362,7 +362,7 @@ body.info-open .scrim { opacity: 1; visibility: visible; transition: opacity 0.4
 .pair-lab { display: grid; grid-template-columns: 1fr 1fr; gap: var(--gap); margin-bottom: 10px; font-size: var(--t1); color: var(--mute); }
 
 /* ---------- Lab (home) ---------- */
-.lab-sec { margin-top: clamp(96px, 10vw, 152px); }
+.lab-sec { margin-top: clamp(96px, 10vw, 152px); margin-bottom: clamp(96px, 10vw, 152px); }
 .lab-sec .grid { margin-top: 32px; }
 .lab-sec .intro-l { margin-top: 18px; max-width: 40em; color: var(--ink-2); }
 .feature .blk.inset { width: min(100%, 760px); }
