@@ -334,6 +334,64 @@
     });
   }
 
+  /* ---------- Compare: the light/dark divider sweeps by itself; drag, tap or use the switch to take over ---------- */
+  function initCompare() {
+    document.querySelectorAll('[data-compare]').forEach(function (f) {
+      var box = f.querySelector('.cmp'), knob = f.querySelector('.cmp-knob'), seg = f.querySelector('.cmp-seg');
+      if (!box || !knob || !seg) { return; }
+      var btns = seg.querySelectorAll('button'), tagL = f.querySelector('.cmp-tag.l'), tagR = f.querySelector('.cmp-tag.r');
+      var p = 50, inView = false, drag = false, until = 0, holdUntil = 0, anim = null;
+      var ease = function (u) { return u < 0.5 ? 4 * u * u * u : 1 - Math.pow(-2 * u + 2, 3) / 2; };
+      var set = function (v) {
+        p = Math.max(0, Math.min(100, v));
+        box.style.setProperty('--p', p + '%');
+        knob.setAttribute('aria-valuenow', String(Math.round(p)));
+        var light = p >= 50;
+        seg.setAttribute('data-on', light ? 'light' : 'dark');
+        btns[0].setAttribute('aria-pressed', String(light)); btns[1].setAttribute('aria-pressed', String(!light));
+        if (tagL) { tagL.style.opacity = p < 10 ? '0' : '1'; }
+        if (tagR) { tagR.style.opacity = p > 90 ? '0' : '1'; }
+      };
+      var go = function (to, dur) { anim = { from: p, to: to, t0: performance.now(), dur: dur }; };
+      var take = function () { until = Date.now() + 8000; };
+      var at = function (e) { var r = box.getBoundingClientRect(); return (e.clientX - r.left) / r.width * 100; };
+      var tick = function (ts) {
+        if (anim) {
+          var u = Math.min(1, (ts - anim.t0) / anim.dur);
+          set(anim.from + (anim.to - anim.from) * ease(u));
+          if (u >= 1) { anim = null; holdUntil = ts + 1500; }
+        } else if (inView && !drag && !reduce && Date.now() > until && ts > holdUntil) {
+          var to = p >= 50 ? 8 : 92;
+          go(to, 1400 + 14 * Math.abs(to - p));
+        }
+        requestAnimationFrame(tick);
+      };
+      box.addEventListener('pointerdown', function (e) {
+        if (e.button) { return; }
+        drag = true; anim = null; take(); box.classList.add('drag');
+        try { box.setPointerCapture(e.pointerId); } catch (err) {}
+        if (e.target !== knob && !knob.contains(e.target)) { go(at(e), 320); }
+      });
+      box.addEventListener('pointermove', function (e) { if (drag) { anim = null; set(at(e)); take(); } });
+      var end = function () { drag = false; take(); box.classList.remove('drag'); };
+      box.addEventListener('pointerup', end);
+      box.addEventListener('pointercancel', end);
+      knob.addEventListener('keydown', function (e) {
+        var step = e.shiftKey ? 20 : 5, k = e.key;
+        var to = k === 'ArrowLeft' ? p - step : k === 'ArrowRight' ? p + step : k === 'Home' ? 0 : k === 'End' ? 100 : null;
+        if (to === null) { return; }
+        e.preventDefault(); anim = null; set(to); take();
+      });
+      btns[0].addEventListener('click', function () { take(); go(100, 700); });
+      btns[1].addEventListener('click', function () { take(); go(0, 700); });
+      set(p);
+      if ('IntersectionObserver' in window) {
+        new IntersectionObserver(function (es) { es.forEach(function (e) { inView = e.isIntersecting; }); }, { threshold: 0.4 }).observe(box);
+      }
+      requestAnimationFrame(tick);
+    });
+  }
+
   /* ---------- Cards that move by themselves while on screen ---------- */
   function initAutoCards() {
     if (reduce || !('IntersectionObserver' in window)) { return; }
@@ -397,6 +455,6 @@
     } catch (e) {}
   }
 
-  var boot = function () { initTop(); initNav(); initResume(); initHome(); initFocusLinks(); initWork(); initCase(); initSlides(); initScrollers(); initMotion(); initImages(); initHover(); initAutoCards(); };
+  var boot = function () { initTop(); initNav(); initResume(); initHome(); initFocusLinks(); initWork(); initCase(); initSlides(); initScrollers(); initCompare(); initMotion(); initImages(); initHover(); initAutoCards(); };
   if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', boot); } else { boot(); }
 })();

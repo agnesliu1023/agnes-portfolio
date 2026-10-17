@@ -487,3 +487,31 @@ body.info-open .scrim { opacity: 1; visibility: visible; transition: opacity 0.4
 @keyframes mq-left { from { transform: translateX(0); } to { transform: translateX(-50%); } }
 @keyframes mq-right { from { transform: translateX(-50%); } to { transform: translateX(0); } }
 .p-chatez-id .case-end { gap: 8px; }
+
+/* Light / dark comparison: a divider sweeps by itself; drag, tap or use the switch to take over. */
+.bx-compare .cmp { --p: 50%; position: relative; aspect-ratio: 2400 / 900; border-radius: 14px; overflow: hidden; background: #121212; cursor: ew-resize; touch-action: pan-y; user-select: none; -webkit-user-select: none; -webkit-tap-highlight-color: transparent; }
+.bx-compare .cmp img { position: absolute; inset: 0; display: block; width: 100%; height: 100%; pointer-events: none; -webkit-user-drag: none; }
+.bx-compare .cmp .cmp-light { clip-path: inset(0 calc(100% - var(--p)) 0 0); }
+.bx-compare .cmp-line { position: absolute; top: 0; bottom: 0; left: var(--p); width: 2px; margin-left: -1px; background: rgba(255, 255, 255, 0.92); box-shadow: 0 0 0 1px rgba(56, 49, 118, 0.10), 0 0 24px rgba(178, 165, 255, 0.55); pointer-events: none; }
+.bx-compare .cmp-knob { position: absolute; top: 50%; left: var(--p); display: grid; place-items: center; width: 52px; height: 52px; margin: -26px 0 0 -26px; padding: 0; border: 0; border-radius: 50%; background: rgba(255, 255, 255, 0.94); color: #383176; box-shadow: 0 8px 24px rgba(42, 31, 102, 0.24); cursor: ew-resize; transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1); }
+.bx-compare .cmp-knob svg { width: 26px; height: 26px; }
+.bx-compare .cmp:hover .cmp-knob, .bx-compare .cmp.drag .cmp-knob { transform: scale(1.08); }
+.bx-compare .cmp-knob:focus-visible { outline: 2px solid #B2A5FF; outline-offset: 3px; }
+.bx-compare .cmp-tag { position: absolute; top: clamp(10px, 1.6vw, 18px); padding: 6px 12px; border-radius: 999px; font-size: 13px; font-weight: 500; line-height: 1.2; pointer-events: none; transition: opacity 0.3s; }
+.bx-compare .cmp-tag.l { left: clamp(10px, 1.6vw, 18px); background: rgba(255, 255, 255, 0.86); color: #383176; }
+.bx-compare .cmp-tag.r { right: clamp(10px, 1.6vw, 18px); background: rgba(255, 255, 255, 0.12); color: #E6E1FF; }
+.bx-compare .cmp-ctrl { display: flex; justify-content: center; margin-top: 16px; }
+.bx-compare .cmp-seg { position: relative; display: grid; grid-template-columns: 1fr 1fr; padding: 4px; border-radius: 999px; background: #EEEAFB; }
+.bx-compare .cmp-seg .thumb { position: absolute; top: 4px; bottom: 4px; left: 4px; width: calc(50% - 4px); border-radius: 999px; background: #383176; box-shadow: 0 4px 12px rgba(42, 31, 102, 0.22); transition: transform 0.45s cubic-bezier(0.2, 0.8, 0.2, 1); }
+.bx-compare .cmp-seg[data-on="dark"] .thumb { transform: translateX(100%); }
+.bx-compare .cmp-seg button { position: relative; z-index: 1; min-width: 84px; padding: 8px 18px; border: 0; border-radius: 999px; background: none; color: #6B6880; font: inherit; font-size: 14px; font-weight: 500; cursor: pointer; transition: color 0.3s; }
+.bx-compare .cmp-seg button[aria-pressed="true"] { color: #FFFFFF; }
+.bx-compare .cmp-seg button:focus-visible { outline: 2px solid #B2A5FF; outline-offset: 2px; }
+.bx-compare figcaption { text-align: center; }
+@media (max-width: 640px) {
+  .bx-compare .cmp { aspect-ratio: 1.15; }
+  .bx-compare .cmp img { object-fit: cover; }
+  .bx-compare .cmp-knob { width: 44px; height: 44px; margin: -22px 0 0 -22px; }
+  .bx-compare .cmp-knob svg { width: 22px; height: 22px; }
+  .bx-compare .cmp-tag { font-size: 12px; padding: 5px 10px; }
+}
