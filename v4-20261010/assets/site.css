@@ -427,3 +427,26 @@ body.info-open .scrim { opacity: 1; visibility: visible; transition: opacity 0.4
 .art-txt .m { font-size: var(--t1); line-height: 1.45; color: var(--mute); }
 .art-txt p:not(.m) { color: var(--ink-2); max-width: 32em; }
 @media (max-width: 899px) { .art-fig, .art-txt { grid-column: 1 / -1; } }
+
+/* ---------- ChatEZ: clearer hierarchy, and a compact step-by-step feature showcase ---------- */
+.p-chatez .sec.major { margin-top: clamp(112px, 11vw, 176px); padding-top: 18px; border-top: 1px solid var(--ink); }
+.p-chatez .sec.major .n { margin-bottom: 14px; }
+.p-chatez .sec.major h2 { font-size: clamp(30px, 3.1vw, 42px); line-height: 1.08; letter-spacing: -0.02em; max-width: 13em; }
+.p-chatez .sec:not(.major) { margin-top: clamp(56px, 6vw, 88px); }
+.p-chatez .sec:not(.major) h2 { font-size: var(--t3); font-weight: 500; line-height: 1.3; }
+.p-chatez .fx-index a { display: block; padding-top: 12px; border-top: 1px solid var(--ink); color: inherit; text-decoration: none; }
+.p-chatez .fx-index a:hover span { color: var(--blue-ink); }
+.p-chatez .fx { display: grid; gap: clamp(20px, 2.4vw, 32px); margin-top: clamp(40px, 5vw, 72px); scroll-margin-top: 96px; }
+.p-chatez .fx-h { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: 24px; row-gap: 10px; align-items: start; }
+.p-chatez .fx-h .k { grid-column: 1 / span 4; }
+.p-chatez .fx-n { display: block; margin-bottom: 6px; font-size: var(--t1); color: var(--blue-ink); }
+.p-chatez .fx-h h3 { font-size: var(--t3); font-weight: 500; line-height: 1.3; }
+.p-chatez .fx-h p { grid-column: 6 / span 7; max-width: 40em; color: var(--ink-2); }
+.p-chatez .phones { display: grid; grid-template-columns: repeat(var(--n), minmax(0, 236px)); justify-content: center; gap: clamp(16px, 3vw, 48px); padding: clamp(28px, 4vw, 56px) clamp(16px, 3vw, 48px) clamp(20px, 3vw, 36px); background: #EEECF8; }
+.p-chatez .ph { margin: 0; }
+.p-chatez .ph .media-el { display: block; width: 100%; height: auto; background: transparent; }
+.p-chatez .ph figcaption { margin-top: 12px; font-size: var(--t1); line-height: 1.4; color: var(--ink-2); }
+.p-chatez .ph figcaption i { margin-right: 6px; font-style: normal; color: var(--mute); font-variant-numeric: tabular-nums; }
+.p-chatez .ph .dm { display: inline-block; margin-left: 4px; padding: 1px 7px; border-radius: 99px; background: var(--ink); color: #FFFFFF; font-size: 11px; line-height: 1.5; vertical-align: 1px; }
+@media (max-width: 899px) { .p-chatez .fx-h .k, .p-chatez .fx-h p { grid-column: 1 / -1; } }
+@media (max-width: 640px) { .p-chatez .phones { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
