@@ -129,7 +129,7 @@
     };
     var render = function (animate) {
       var F = D.focus[current], fp = D.projects[F.featured];
-      els.role.textContent = 'Agnes Liu — ' + F.role;
+      if (els.role) { els.role.textContent = 'Agnes Liu — ' + F.role; }
       els.h1.innerHTML = F.hero.map(function (h) { return h[1] ? '<em>' + esc(h[0]) + '</em>' : esc(h[0]); }).join('');
       els.bio.textContent = F.bio;
       els.btns.forEach(function (b) { b.setAttribute('aria-pressed', b.getAttribute('data-focus') === current ? 'true' : 'false'); });
