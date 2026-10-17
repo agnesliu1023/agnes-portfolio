@@ -452,3 +452,21 @@ body.info-open .scrim { opacity: 1; visibility: visible; transition: opacity 0.4
 .p-chatez .ph figcaption i { margin-right: 6px; font-style: normal; color: var(--mute); font-variant-numeric: tabular-nums; }
 @media (max-width: 899px) { .p-chatez .fx-h .k, .p-chatez .fx-h p { grid-column: 1 / -1; } }
 @media (max-width: 640px) { .p-chatez .phones, .p-chatez .phones.split { grid-template-columns: repeat(2, minmax(0, 1fr)); padding-top: 28px; } .p-chatez .phones.split .dk1 { grid-column-start: auto !important; } .p-chatez .phones .mode { position: static; grid-column: 1 / -1; justify-self: end; margin-top: 8px; } }
+
+/* ---------- ChatEZ brand refresh: film, statement, logo panels, palette ---------- */
+.p-chatez .bx-film .media-el { display: block; width: 100%; height: auto; background: #F4F2FF; }
+.p-chatez .bx-statement { margin: clamp(24px, 4vw, 64px) 0 clamp(8px, 2vw, 24px); max-width: 13em; font-size: clamp(34px, 5.4vw, 80px); font-weight: 500; line-height: 1.02; letter-spacing: -0.035em; color: var(--ink); }
+.p-chatez .bx-statement span { color: #383176; }
+.p-chatez .bx-logos { display: grid; grid-template-columns: 1fr 1fr; gap: var(--gap); }
+.p-chatez .bx-logos figcaption { grid-column: 1 / -1; margin-top: 0; }
+.p-chatez .bx-logos .lg { aspect-ratio: 4 / 3; display: flex; align-items: center; justify-content: center; gap: 3.5%; }
+.p-chatez .bx-logos .lg.mist { background: #F4F2FF; }
+.p-chatez .bx-logos .lg.deep { background: #383176; }
+.p-chatez .bx-logos .ic { width: 17%; height: auto; }
+.p-chatez .bx-logos .wm { width: 44%; height: auto; }
+.p-chatez .bx-palette { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); }
+.p-chatez .swatch { display: flex; flex-direction: column; justify-content: flex-end; gap: 2px; min-height: clamp(180px, 20vw, 280px); padding: clamp(12px, 1.4vw, 18px); color: #1E1B2E; font-size: var(--t1); line-height: 1.35; }
+.p-chatez .swatch.dk { color: #FFFFFF; }
+.p-chatez .swatch b { margin-bottom: 4px; font-size: var(--t2); font-weight: 500; }
+.p-chatez .swatch span { opacity: 0.72; font-variant-numeric: tabular-nums; }
+@media (max-width: 759px) { .p-chatez .bx-palette { grid-template-columns: repeat(3, minmax(0, 1fr)); } .p-chatez .bx-logos { grid-template-columns: 1fr; } }
