@@ -13,7 +13,8 @@
     'risd.html': '/risd-m-set', 'echoes.html': '/echoes-pattern-path-set',
     'radiant.html': '/radiant-set', 'still-i-rise.html': '/still-i-rise-set',
     'art.html': '/work_artpainting',
-    'floats.html': '/work_all?project=shanghai-tourism-festival-floats'
+    'floats.html': '/work_all?project=shanghai-tourism-festival-floats',
+    'chatez-brand.html': '/work_all?project=chatez-identity'
   };
   var aliases = {
     '': ['index.html'], 'work_campaign': ['index.html', 'brand'], 'work_branding': ['index.html', 'brand'],
@@ -28,7 +29,8 @@
     'risd': ['risd.html'], 'echoes': ['echoes.html'], 'radiant': ['radiant.html'],
     'still-i-rise': ['still-i-rise.html'],
     'art': ['art.html'], 'art-and-painting': ['art.html'], 'art-and-painting-descriptions': ['art.html'],
-    '?shanghai-tourism-festival-floats': ['floats.html']
+    '?shanghai-tourism-festival-floats': ['floats.html'],
+    '?chatez-identity': ['chatez-brand.html']
   };
   function slug(s) { try { return decodeURIComponent(s.replace(/^\/+|\/+$/g, '')).toLowerCase(); } catch (e) { return s; } }
   Object.keys(canonical).forEach(function (file) { aliases[slug(canonical[file])] = [file]; aliases[file] = [file]; });

@@ -470,3 +470,20 @@ body.info-open .scrim { opacity: 1; visibility: visible; transition: opacity 0.4
 .p-chatez .swatch b { margin-bottom: 4px; font-size: var(--t2); font-weight: 500; }
 .p-chatez .swatch span { opacity: 0.72; font-variant-numeric: tabular-nums; }
 @media (max-width: 759px) { .p-chatez .bx-palette { grid-template-columns: repeat(3, minmax(0, 1fr)); } .p-chatez .bx-logos { grid-template-columns: 1fr; } }
+
+/* ---------- ChatEZ Identity: rounded motion tiles and endless strips ---------- */
+.p-chatez-id .bx-film .media-el, .p-chatez-id .row .media-el, .p-chatez-id .bx-logos .lg { border-radius: 14px; overflow: hidden; }
+.p-chatez-id .bx-film.wide .media-el { background: #F4F2FF; }
+.p-chatez-id .mq { display: grid; gap: 12px; overflow: hidden; padding: clamp(16px, 2vw, 24px) 0; border-radius: 14px; background: #F4F2FF; }
+.p-chatez-id .mq-row { overflow: hidden; }
+.p-chatez-id .mq-track { display: flex; width: max-content; animation: mq-left 60s linear infinite; }
+.p-chatez-id .mq-row.r .mq-track { animation-name: mq-right; animation-duration: 70s; }
+.p-chatez-id .mq img { display: block; flex: none; margin-right: 12px; width: clamp(150px, 15vw, 210px); height: auto; border-radius: 10px; }
+.p-chatez-id .mq-screens { background: #F3F2F7; padding: clamp(24px, 3vw, 40px) 0; }
+.p-chatez-id .mq-screens .mq-track { animation-duration: 90s; }
+.p-chatez-id .mq-screens img { margin-right: clamp(16px, 2vw, 28px); }
+.p-chatez-id .mq-screens img { width: clamp(150px, 14vw, 200px); border-radius: 0; }
+.p-chatez-id .mq:hover .mq-track { animation-play-state: paused; }
+@keyframes mq-left { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+@keyframes mq-right { from { transform: translateX(-50%); } to { transform: translateX(0); } }
+.p-chatez-id .case-end { gap: 8px; }
