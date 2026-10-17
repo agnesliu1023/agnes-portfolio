@@ -500,7 +500,7 @@ body.info-open .scrim { opacity: 1; visibility: visible; transition: opacity 0.4
 .bx-compare .cmp-tag { position: absolute; top: clamp(10px, 1.6vw, 18px); padding: 6px 12px; border-radius: 999px; font-size: 13px; font-weight: 500; line-height: 1.2; pointer-events: none; transition: opacity 0.3s; }
 .bx-compare .cmp-tag.l { left: clamp(10px, 1.6vw, 18px); background: rgba(255, 255, 255, 0.86); color: #383176; }
 .bx-compare .cmp-tag.r { right: clamp(10px, 1.6vw, 18px); background: rgba(255, 255, 255, 0.12); color: #E6E1FF; }
-.bx-compare .cmp-ctrl { display: flex; justify-content: center; margin-top: 16px; }
+.bx-compare .cmp-ctrl { display: flex; justify-content: center; margin-bottom: 16px; }
 .bx-compare .cmp-seg { position: relative; display: grid; grid-template-columns: 1fr 1fr; padding: 4px; border-radius: 999px; background: #EEEAFB; }
 .bx-compare .cmp-seg .thumb { position: absolute; top: 4px; bottom: 4px; left: 4px; width: calc(50% - 4px); border-radius: 999px; background: #383176; box-shadow: 0 4px 12px rgba(42, 31, 102, 0.22); transition: transform 0.45s cubic-bezier(0.2, 0.8, 0.2, 1); }
 .bx-compare .cmp-seg[data-on="dark"] .thumb { transform: translateX(100%); }
