@@ -55,7 +55,7 @@
   }
 
   /* ---------- Résumé: one PDF per portfolio focus, downloaded on click ---------- */
-  var RESUME = { brand: 'Agnes_Liu_Resume_Brand_Campaign_Designer.pdf', product: 'Agnes_Liu_Resume_Product_Designer.pdf', print: 'Agnes_Liu_Resume_Illustration_Print_Designer.pdf' };
+  var RESUME = { brand: 'Agnes_Liu_Resume_Campaign_Branding_Designer.pdf', product: 'Agnes_Liu_Resume_Product_Designer.pdf', print: 'Agnes_Liu_Resume_Illustration_Editorial_Designer.pdf' };
   function resumeFile() { var f = store.get('al-focus'); return RESUME[FOCI.indexOf(f) > -1 ? f : 'brand']; }
   function syncResume() {
     var name = resumeFile();
