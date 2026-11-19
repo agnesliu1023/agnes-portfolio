@@ -832,6 +832,24 @@ html.noscroll,html.noscroll body{overflow:hidden}
 .tmap.full .tm-bar{right:auto;max-width:calc(100% - 90px);padding:6px 8px 6px 14px;border-radius:12px;background:color-mix(in srgb,var(--sheet-2) 92%,transparent)}
 @media (max-width:620px){ .tmap.full .kg-legend{display:none} }
 
+/* ---------- v5.6: diagram look — borderless nodes, soft shadows, lines edge to edge ---------- */
+:root{--edge:#cbc6bb}
+.kg-lines line,.tmap line{stroke:var(--edge);stroke-width:1.5;stroke-linecap:round}
+.kg-node,.tm-node,.kg-center{border-color:transparent}
+.kg-node,.tm-node{box-shadow:0 1px 2px rgb(20 18 12 / .05),0 12px 28px -14px rgb(20 18 12 / .24)}
+.kg-node{padding:10px 16px;border-radius:12px;font-size:13px;gap:10px}
+.kg-node.child{font-size:12px}
+.kg-node .dot{width:10px;height:10px}
+.kg-center{padding:18px 26px;border-radius:20px;box-shadow:0 2px 4px rgb(20 18 12 / .04),0 24px 48px -22px rgb(20 18 12 / .3)}
+.kg-edge{font-size:10.5px;padding:3px 8px;border-radius:4px;letter-spacing:.08em}
+.tm-node{padding:6px 12px;border-radius:10px}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) .kg-node,:root:not([data-theme="light"]) .tm-node,:root:not([data-theme="light"]) .kg-center{border-color:var(--rule)} }
+:root[data-theme="dark"] .kg-node,:root[data-theme="dark"] .tm-node,:root[data-theme="dark"] .kg-center{border-color:var(--rule)}
+#kg.kg{height:740px}
+.kg.ego{height:620px}
+.kg-node.child{max-width:300px}
+.tmap.sm{height:560px}
+
 /* ---------- claim diagrams (renderer and styles carried over from v4) ---------- */
 .fig{container-type:inline-size;margin:16px 0 8px;background:var(--sheet);border:1px solid var(--rule);border-radius:10px;padding:16px 16px 14px}
 .fig figcaption{font-size:11px;letter-spacing:.08em;color:var(--ink-3);margin-bottom:12px;font-family:var(--f-mono)}
@@ -1210,7 +1228,7 @@ function go(hash) { if (location.hash === '#' + hash) route(); else location.has
 
 /* ---------- home ---------- */
 function pHome() {
-  setTimeout(() => loadTopics().then(() => drawTopicMap($('#homeMap'), 'all', 34)).catch(() => {}), 0);
+  setTimeout(() => loadTopics().then(() => drawTopicMap($('#homeMap'), 'all', 30)).catch(() => {}), 0);
   const T = C.totals, eps = C.eps;
   const steps = [
     ['Interviews', `${fmt(eps.length)} long-form interviews, ${fmt(T.hours)} hours, from five sources.`, '5 sources', 'interviews'],
@@ -2104,43 +2122,75 @@ function renderMap(g, topics) {
     <div class="kg-list">${list}</div>
     <div id="kgView" class="kg-hint">Pick a topic to read every claim behind it.</div>`;
 }
-// Place nodes in pixels once their real sizes are known: topics on an inner ring pushed out until they
-// clear the centre card, then each linked node outward from its topic, turning a little either way
-// until neither it nor its edge label overlaps anything already placed.
+// Place nodes in pixels once their real sizes are known: topics on a ring pushed out until they clear the
+// centre card with room to spare, then each linked node outward from its topic, turning a little either
+// way until it, its edge label and a visible stretch of line on both sides of the label all fit.
+// Lines run box edge to box edge (like a drawn diagram); if the map can't fit at its normal size it is
+// laid out on a bigger canvas and shown zoomed out to fit.
 function layoutMap() {
   const kg = $('#kg'); if (!kg || !S.map || kg.offsetParent === null) return;
-  const W = kg.clientWidth, H = kg.clientHeight, cx = W / 2, cy = H / 2, topics = S.map.topics, n = topics.length;
-  const center = $('.kg-center', kg);
-  const placed = [{ x: cx, y: cy, w: center.offsetWidth + 28, h: center.offsetHeight + 24 }];
+  const BW = kg.clientWidth, BH = kg.clientHeight, topics = S.map.topics, n = topics.length;
+  const center = $('.kg-center', kg), stage = kg.querySelector(':scope > .pz-stage');
+  const T = topics.map((t, i) => { const el = kg.querySelector(`.kg-node.topic[data-t="${i}"]`), cn = t.child && kg.querySelector(`.kg-node.child[data-t="${i}"]`), en = t.child && kg.querySelector(`.kg-edge[data-t="${i}"]`);
+    if (cn) { cn.hidden = false; en.hidden = false; }
+    return { el, cn, en, w: el.offsetWidth, h: el.offsetHeight, cw: cn ? cn.offsetWidth : 0, ch: cn ? cn.offsetHeight : 0, ew: en ? en.offsetWidth : 0, eh: en ? en.offsetHeight : 0 }; });
+  const cw = center.offsetWidth, ch = center.offsetHeight;
+  let best = null;
+  for (const s of [1, 1.12, 1.25, 1.4]) { const r = kgTry(BW * s, BH * s, T, cw, ch, n); if (!best || r.miss < best.miss) best = r; if (!r.miss) break; }
+  const { W, H, cx, cy, pos } = best;
+  if (stage) { stage.style.width = W > BW ? W + 'px' : ''; stage.style.height = H > BH ? H + 'px' : ''; }
+  const put = (el, x, y) => { el.style.left = x + 'px'; el.style.top = y + 'px'; };
+  put(center, cx, cy);
+  const lines = [];
+  T.forEach((o, i) => {
+    const p = pos[i]; put(o.el, p.x, p.y);
+    const a = kgSeg(cx, cy, cw, ch, p.x, p.y, o.w, o.h); lines.push(`<line x1="${a[0]}" y1="${a[1]}" x2="${a[2]}" y2="${a[3]}" data-t="${i}"/>`);
+    if (!o.cn) return;
+    o.cn.hidden = o.en.hidden = !p.c;
+    if (!p.c) return;
+    put(o.cn, p.c.x, p.c.y); put(o.en, p.c.mx, p.c.my);
+    const b = kgSeg(p.x, p.y, o.w, o.h, p.c.x, p.c.y, o.cw, o.ch); lines.push(`<line class="c" x1="${b[0]}" y1="${b[1]}" x2="${b[2]}" y2="${b[3]}" data-t="${i}"/>`);
+  });
+  const svg = $('.kg-lines', kg); svg.setAttribute('viewBox', `0 0 ${W} ${H}`); svg.innerHTML = lines.join('');
+  if (kg._pz) { const k = Math.min(1, BW / W, BH / H); Object.assign(kg._pz, { k, x: (BW - W * k) / 2, y: (BH - H * k) / 2 }); pzApply(kg); }
+}
+// the stretch of the line between two boxes that is not hidden under either of them
+function kgSeg(x1, y1, w1, h1, x2, y2, w2, h2) {
+  const dx = x2 - x1, dy = y2 - y1, ax = Math.abs(dx) || 1e-6, ay = Math.abs(dy) || 1e-6;
+  const s1 = Math.min(w1 / 2 / ax, h1 / 2 / ay), s2 = Math.min(w2 / 2 / ax, h2 / 2 / ay);
+  return [x1 + dx * s1, y1 + dy * s1, x2 - dx * s2, y2 - dy * s2].map(v => +v.toFixed(1));
+}
+function kgTry(W, H, T, cw, ch, n) {
+  const cx = W / 2, cy = H / 2 - 6, GX = 56, GY = 34;
+  const placed = [{ x: cx, y: cy, w: cw + 90, h: ch + 70 }];
   const hit = b => placed.some(p => Math.abs(p.x - b.x) * 2 < p.w + b.w && Math.abs(p.y - b.y) * 2 < p.h + b.h);
   const fit = (v, half, lo, hi) => Math.max(lo + half, Math.min(hi - half, v));
-  const put = (el, x, y) => { el.style.left = x + 'px'; el.style.top = y + 'px'; };
   const pos = [];
-  topics.forEach((t, i) => {
-    const a = -Math.PI / 2 + (i + 0.5) * 2 * Math.PI / n, el = kg.querySelector(`.kg-node.topic[data-t="${i}"]`);
-    const w = el.offsetWidth, h = el.offsetHeight;
-    let rx = W * 0.2, ry = H * 0.28, x, y, b, k = 0;
-    do { x = fit(cx + Math.cos(a) * rx, w / 2, 8, W - 8); y = fit(cy + Math.sin(a) * ry, h / 2, 8, H - 36); b = { x, y, w: w + 18, h: h + 14 }; rx += 16; ry += 8; } while (hit(b) && ++k < 24);
-    placed.push(b); put(el, x, y); pos[i] = { x, y, a };
+  T.forEach((o, i) => {
+    const a = -Math.PI / 2 + (i + 0.5) * 2 * Math.PI / n;
+    let rx = W * 0.25, ry = H * 0.25, x, y, b, k = 0;
+    do { x = fit(cx + Math.cos(a) * rx, o.w / 2, 18, W - 18); y = fit(cy + Math.sin(a) * ry, o.h / 2, 18, H - 52); b = { x, y, w: o.w + GX, h: o.h + GY }; rx += 16; ry += 9; } while (hit(b) && ++k < 30);
+    placed.push(b); pos[i] = { x, y, a };
   });
-  topics.forEach((t, i) => {
-    if (!t.child) return;
-    const cn = kg.querySelector(`.kg-node.child[data-t="${i}"]`), en = kg.querySelector(`.kg-edge[data-t="${i}"]`);
-    cn.hidden = false; en.hidden = false;
-    const w = cn.offsetWidth, h = cn.offsetHeight, ew = en.offsetWidth, eh = en.offsetHeight, { x: tx, y: ty, a } = pos[i];
-    const base = 145 + 60 * Math.abs(Math.cos(a)); // long enough that the link shows on both sides of its label
-    outer: for (const da of [0, 0.3, -0.3, 0.6, -0.6, 0.95, -0.95, 1.3, -1.3]) {
-      for (let d = base; d < base + 200; d += 26) {
-        const x = fit(tx + Math.cos(a + da) * d, w / 2, 8, W - 8), y = fit(ty + Math.sin(a + da) * d * 0.85, h / 2, 8, H - 36);
-        const b = { x, y, w: w + 14, h: h + 10 }, mx = (tx + x) / 2, my = (ty + y) / 2, eb = { x: mx, y: my, w: ew + 8, h: eh + 6 };
-        if (!hit(b) && !hit(eb)) { placed.push(b, eb); put(cn, x, y); put(en, mx, my); pos[i].c = { x, y }; break outer; }
+  let miss = 0;
+  T.forEach((o, i) => {
+    if (!o.cn) return;
+    const { x: tx, y: ty, a } = pos[i], base = 150 + 70 * Math.abs(Math.cos(a));
+    outer: for (const da of [0, 0.28, -0.28, 0.55, -0.55, 0.85, -0.85, 1.2, -1.2]) {
+      for (let d = base; d < base + 260; d += 22) {
+        const x = fit(tx + Math.cos(a + da) * d, o.cw / 2, 18, W - 18), y = fit(ty + Math.sin(a + da) * d * 0.8, o.ch / 2, 18, H - 52);
+        const sg = kgSeg(tx, ty, o.w, o.h, x, y, o.cw, o.ch), vx = sg[2] - sg[0], vy = sg[3] - sg[1], len = Math.hypot(vx, vy);
+        // the label needs its own length along the line plus at least 22px of line showing on each side
+        const along = Math.min(o.ew / (Math.abs(vx / len) || 1e-6), o.eh / (Math.abs(vy / len) || 1e-6));
+        if (!(len > along + 44)) continue;
+        const mx = (sg[0] + sg[2]) / 2, my = (sg[1] + sg[3]) / 2;
+        const b = { x, y, w: o.cw + GX * 0.8, h: o.ch + GY * 0.8 }, eb = { x: mx, y: my, w: o.ew + 16, h: o.eh + 12 };
+        if (!hit(b) && !hit(eb)) { placed.push(b, eb); pos[i].c = { x, y, mx, my }; break outer; }
       }
     }
-    if (!pos[i].c) { cn.hidden = true; en.hidden = true; }
+    if (!pos[i].c) miss++;
   });
-  const svg = $('.kg-lines', kg);
-  svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
-  svg.innerHTML = topics.map((t, i) => `<line x1="${cx}" y1="${cy}" x2="${pos[i].x}" y2="${pos[i].y}" data-t="${i}"/>${pos[i].c ? `<line class="c" x1="${pos[i].x}" y1="${pos[i].y}" x2="${pos[i].c.x}" y2="${pos[i].c.y}" data-t="${i}"/>` : ''}`).join('');
+  return { W, H, cx, cy, pos, miss };
 }
 let kgRz;
 window.addEventListener('resize', () => { clearTimeout(kgRz); kgRz = setTimeout(layoutMap, 120); });
@@ -2264,7 +2314,7 @@ async function fillTopics() {
     <section class="sec-head"><div><h2>Every topic, by field</h2><p>Grouped by the field each topic comes up in most. The number is how many people talk about it.</p></div></section>
     <section class="tindex">${groups.map(g => `<div class="sheet tgroup"><h3>${E(fname(g.fi))}<small>${g.list.length}</small></h3><div class="chips">${g.list.map(x => `<a class="chip tchip k-${x.t.kind}" href="#topic-${x.t.id}"><i class="dot"></i>${E(x.t.label)} <small>${x.t.np}</small></a>`).join('')}</div></div>`).join('')}</section>
     ${foot()}`;
-  drawTopicMap($('#tmap'), st.field, 64);
+  drawTopicMap($('#tmap'), st.field, 50);
 }
 const TM_ICON = {
   expand: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4h6v6M10 20H4v-6M20 4l-7 7M4 20l7-7"/></svg>',
@@ -2275,10 +2325,10 @@ const TM_ICON = {
 function toggleFull(box, on) {
   if (!box) return;
   on = on ?? !box.classList.contains('full');
-  const a = box._args || { field: 'all', n: 64 };
+  const a = box._args || { field: 'all', n: 50 };
   if (on) {
     box._small = a; box.classList.add('full'); document.documentElement.classList.add('noscroll');
-    drawTopicMap(box, a.field, 120);
+    drawTopicMap(box, a.field, 96);
     setTimeout(() => { const b = box.querySelector('[data-tmx]'); if (b) b.focus(); }, 0);
   } else {
     box.classList.remove('full'); document.documentElement.classList.remove('noscroll');
@@ -2315,20 +2365,20 @@ function layoutTopicMap(box) {
   if (!box || !box._tm || !box.offsetWidth) return; // offsetParent is null for the fixed full-screen map, so test size
   const full = box.classList.contains('full'), BW = box.clientWidth, BH = box.clientHeight, T = S.topics, top = full ? 70 : 6;
   // a phone-sized full screen gets a bigger canvas than the screen, opened zoomed out, so 120 labels have room
-  const port = BH > BW, W = full ? Math.max(BW, port ? 820 : 1100) : BW, H = full ? Math.max(BH, port ? 1300 : 820) : BH, big = W > BW || H > BH;
+  const port = BH > BW, W = full ? Math.max(BW, port ? 900 : 1100) : BW, H = full ? Math.max(BH, port ? 1460 : 820) : BH, big = W > BW || H > BH;
   const { ids, edges } = box._tm, stage = box.querySelector(':scope > .pz-stage');
   if (stage) { stage.style.width = big ? W + 'px' : ''; stage.style.height = big ? H + 'px' : ''; }
   const els = new Map(ids.map(i => [i, box.querySelector(`[data-ti="${i}"]`)]));
   const N = ids.map((i, k) => { const el = els.get(i), f = domField(T[i]), a = (f < 0 ? k : f) / 12 * Math.PI * 2 + (k % 5) * 0.11;
-    return { i, w: el.offsetWidth + 14, h: el.offsetHeight + 10, x: W / 2 + Math.cos(a) * W * 0.3 * (0.6 + (k % 3) * 0.2), y: H / 2 + Math.sin(a) * H * 0.3 * (0.6 + (k % 4) * 0.13), vx: 0, vy: 0 }; });
+    return { i, w: el.offsetWidth + 40, h: el.offsetHeight + 26, x: W / 2 + Math.cos(a) * W * 0.3 * (0.6 + (k % 3) * 0.2), y: H / 2 + Math.sin(a) * H * 0.3 * (0.6 + (k % 4) * 0.13), vx: 0, vy: 0 }; });
   const at = new Map(N.map(n => [n.i, n]));
   for (let it = 0; it < 320; it++) {
     const cool = 1 - it / 320;
     for (let a = 0; a < N.length; a++) for (let b = a + 1; b < N.length; b++) {
-      const p = N[a], q = N[b]; let dx = q.x - p.x, dy = q.y - p.y; const d2 = dx * dx + dy * dy + 0.01, f = 5600 / d2;
+      const p = N[a], q = N[b]; let dx = q.x - p.x, dy = q.y - p.y; const d2 = dx * dx + dy * dy + 0.01, f = 9000 / d2;
       const d = Math.sqrt(d2); dx /= d; dy /= d; p.vx -= dx * f; p.vy -= dy * f; q.vx += dx * f; q.vy += dy * f;
     }
-    edges.forEach(([i, j, w]) => { const p = at.get(i), q = at.get(j), dx = q.x - p.x, dy = q.y - p.y, d = Math.sqrt(dx * dx + dy * dy) + 0.01, f = (d - 150) * 0.012 * (0.5 + w / 100); p.vx += dx / d * f; p.vy += dy / d * f; q.vx -= dx / d * f; q.vy -= dy / d * f; });
+    edges.forEach(([i, j, w]) => { const p = at.get(i), q = at.get(j), dx = q.x - p.x, dy = q.y - p.y, d = Math.sqrt(dx * dx + dy * dy) + 0.01, f = (d - 190) * 0.012 * (0.5 + w / 100); p.vx += dx / d * f; p.vy += dy / d * f; q.vx -= dx / d * f; q.vy -= dy / d * f; });
     N.forEach(n => { n.vx += (W / 2 - n.x) * 0.003; n.vy += (H / 2 - n.y) * 0.005; n.x += Math.max(-20, Math.min(20, n.vx * cool)); n.y += Math.max(-20, Math.min(20, n.vy * cool)); n.vx *= 0.55; n.vy *= 0.55; });
   }
   for (let it = 0; it < 360; it++) {
@@ -2344,7 +2394,7 @@ function layoutTopicMap(box) {
   const svg = $('.kg-lines', box); svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
   svg.innerHTML = edges.map(([i, j, w]) => { const p = at.get(i), q = at.get(j); return `<line x1="${p.x}" y1="${p.y}" x2="${q.x}" y2="${q.y}" data-a="${i}" data-b="${j}" style="stroke-opacity:${Math.min(1, 0.6 + w / 200)}"/>`; }).join('');
   box.classList.add('ready');
-  if (big && box._pz && !box._pz.user) { const k = Math.max(0.5, Math.min(1, BW / W, (BH - 120) / H)); Object.assign(box._pz, { k, x: (BW - W * k) / 2, y: (BH - H * k) / 2 + 20 }); pzApply(box); }
+  if (big && box._pz && !box._pz.user) { const k = Math.max(PZ_MIN, Math.min(1, BW / W, (BH - 120) / H)); Object.assign(box._pz, { k, x: (BW - W * k) / 2, y: (BH - H * k) / 2 + 20 }); pzApply(box); }
 }
 
 /* ----- one topic ----- */
@@ -2420,33 +2470,47 @@ function drawEgo(t, ti) {
 }
 function layoutEgo(box) {
   if (!box || !box._ego || box.offsetParent === null) return;
-  const W = box.clientWidth, H = box.clientHeight, cx = W / 2, cy = H / 2 - 10, n = box._ego.length, c = $('.ego-c', box);
-  c.style.left = cx + 'px'; c.style.top = cy + 'px';
-  const placed = [{ x: cx, y: cy, w: c.offsetWidth + 24, h: c.offsetHeight + 20 }];
-  const hit = b => placed.some(p => Math.abs(p.x - b.x) * 2 < p.w + b.w && Math.abs(p.y - b.y) * 2 < p.h + b.h);
+  const BW = box.clientWidth, BH = box.clientHeight, n = box._ego.length, c = $('.ego-c', box), stage = box.querySelector(':scope > .pz-stage');
+  const cw = c.offsetWidth, ch = c.offsetHeight;
+  const N = box._ego.map((nd, i) => { const el = box.querySelector(`.kg-node[data-e="${i}"]`), ed = box.querySelector(`.kg-edge[data-e="${i}"]`); el.hidden = ed.hidden = false; return { el, ed, w: el.offsetWidth, h: el.offsetHeight, ew: ed.offsetWidth, eh: ed.offsetHeight }; });
   const fit = (v, half, lo, hi) => Math.max(lo + half, Math.min(hi - half, v));
-  const lines = [];
-  box._ego.forEach((nd, i) => {
-    const el = box.querySelector(`.kg-node[data-e="${i}"]`), ed = box.querySelector(`.kg-edge[data-e="${i}"]`);
-    const w = el.offsetWidth, h = el.offsetHeight, ew = ed.offsetWidth, eh = ed.offsetHeight, a0 = -Math.PI / 2 + (i + 0.5) * 2 * Math.PI / n;
-    let done = false;
-    for (const da of [0, 0.12, -0.12, 0.24, -0.24, 0.36, -0.36]) {
-      for (let r = 0.3; r < 0.5 && !done; r += 0.03) {
-        const a = a0 + da, x = fit(cx + Math.cos(a) * W * r, w / 2, 8, W - 8), y = fit(cy + Math.sin(a) * H * (r + 0.05), h / 2, 8, H - 36);
-        const b = { x, y, w: w + 14, h: h + 10 }, mx = cx + (x - cx) * 0.55, my = cy + (y - cy) * 0.55, eb = { x: mx, y: my, w: ew + 8, h: eh + 6 };
-        if (!hit(b) && !hit(eb)) { placed.push(b, eb); el.style.left = x + 'px'; el.style.top = y + 'px'; ed.style.left = mx + 'px'; ed.style.top = my + 'px'; lines.push(`<line x1="${cx}" y1="${cy}" x2="${x}" y2="${y}" data-e="${i}"/>`); done = true; }
+  let best = null;
+  for (const s of [1, 1.12, 1.25, 1.4]) {
+    const W = BW * s, H = BH * s, cx = W / 2, cy = H / 2 - 10, GX = 50, GY = 30;
+    const placed = [{ x: cx, y: cy, w: cw + 60, h: ch + 44 }], out = [];
+    const hit = b => placed.some(p => Math.abs(p.x - b.x) * 2 < p.w + b.w && Math.abs(p.y - b.y) * 2 < p.h + b.h);
+    let miss = 0;
+    N.forEach((o, i) => {
+      const a0 = -Math.PI / 2 + (i + 0.5) * 2 * Math.PI / n;
+      for (const da of [0, 0.1, -0.1, 0.2, -0.2, 0.32, -0.32]) {
+        for (let r = 0.3; r < 0.52; r += 0.025) {
+          const a = a0 + da, x = fit(cx + Math.cos(a) * W * r, o.w / 2, 16, W - 16), y = fit(cy + Math.sin(a) * H * (r + 0.06), o.h / 2, 16, H - 46);
+          const sg = kgSeg(cx, cy, cw, ch, x, y, o.w, o.h), vx = sg[2] - sg[0], vy = sg[3] - sg[1], len = Math.hypot(vx, vy);
+          const along = Math.min(o.ew / (Math.abs(vx / len) || 1e-6), o.eh / (Math.abs(vy / len) || 1e-6));
+          if (!(len > along + 44)) continue;
+          const mx = (sg[0] + sg[2]) / 2, my = (sg[1] + sg[3]) / 2, b = { x, y, w: o.w + GX, h: o.h + GY }, eb = { x: mx, y: my, w: o.ew + 16, h: o.eh + 12 };
+          if (!hit(b) && !hit(eb)) { placed.push(b, eb); out[i] = { x, y, mx, my, sg }; break; }
+        }
+        if (out[i]) break;
       }
-      if (done) break;
-    }
-    el.hidden = !done; ed.hidden = !done;
-  });
+      if (!out[i]) miss++;
+    });
+    if (!best || miss < best.miss) best = { W, H, cx, cy, out, miss };
+    if (!miss) break;
+  }
+  const { W, H, cx, cy, out } = best, put = (el, x, y) => { el.style.left = x + 'px'; el.style.top = y + 'px'; };
+  if (stage) { stage.style.width = W > BW ? W + 'px' : ''; stage.style.height = H > BH ? H + 'px' : ''; }
+  put(c, cx, cy);
+  const lines = [];
+  N.forEach((o, i) => { const p = out[i]; o.el.hidden = o.ed.hidden = !p; if (!p) return; put(o.el, p.x, p.y); put(o.ed, p.mx, p.my); lines.push(`<line x1="${p.sg[0]}" y1="${p.sg[1]}" x2="${p.sg[2]}" y2="${p.sg[3]}" data-e="${i}"/>`); });
   const svg = $('.kg-lines', box); svg.setAttribute('viewBox', `0 0 ${W} ${H}`); svg.innerHTML = lines.join('');
+  if (box._pz) { const k = Math.min(1, BW / W, BH / H); Object.assign(box._pz, { k, x: (BW - W * k) / 2, y: (BH - H * k) / 2 }); pzApply(box); }
 }
 
 /* ----- events ----- */
 document.addEventListener('click', ev => {
   const t = ev.target;
-  const f = t.closest('[data-tmf]'); if (f) { S.tmap.field = f.dataset.tmf; $$('[data-tmf]').forEach(b => b.setAttribute('aria-pressed', b.dataset.tmf === S.tmap.field)); drawTopicMap($('#tmap'), S.tmap.field, 64); return; }
+  const f = t.closest('[data-tmf]'); if (f) { S.tmap.field = f.dataset.tmf; $$('[data-tmf]').forEach(b => b.setAttribute('aria-pressed', b.dataset.tmf === S.tmap.field)); drawTopicMap($('#tmap'), S.tmap.field, 50); return; }
   if (t.closest('[data-tmore]')) { S.tlimit += 20; const m = /^#topic-(.+)$/.exec(location.hash); const ti = m && S.topicById.get(m[1]); if (ti != null) $('#tclaims').innerHTML = topicClaims(S.topics[ti], ti); return; }
   const tq = t.closest('[data-tq]'); if (tq) { ev.preventDefault(); startSearch(tq.dataset.tq); }
 });
@@ -2459,7 +2523,7 @@ document.addEventListener('change', ev => {
   const s = ev.target.closest('[data-tmsel]'); if (!s) return;
   const box = s.closest('.tmap'), full = box.classList.contains('full');
   if (S.tmap && box.id === 'tmap') { S.tmap.field = s.value; $$('[data-tmf]').forEach(b => b.setAttribute('aria-pressed', b.dataset.tmf === s.value)); }
-  drawTopicMap(box, s.value, full ? 120 : (box._args ? box._args.n : 64));
+  drawTopicMap(box, s.value, full ? 96 : (box._args ? box._args.n : 50));
 });
 document.addEventListener('keydown', ev => { if (ev.key === 'Escape') { const f = $('.tmap.full'); if (f) toggleFull(f, false); } });
 window.addEventListener('hashchange', () => { const f = $('.tmap.full'); if (f) { f.classList.remove('full'); document.documentElement.classList.remove('noscroll'); } });
