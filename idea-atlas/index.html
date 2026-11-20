@@ -1070,6 +1070,8 @@ async function boot() {
 }
 function srcOfKey(k) { k = String(k); return /^[tnlv]/.test(k) ? k[0] : 'z'; }
 function srcOfClaim(cid) { return srcOfKey(cid.slice(0, cid.lastIndexOf('-'))); }
+// a claim id is <episode key>-<n>, so the episode it came from can be found from the id alone
+function epOfClaim(cid) { if (!S.epKey) S.epKey = new Map(C.eps.map((e, i) => [e.k, i])); const k = cid.slice(0, cid.lastIndexOf('-')); return S.epKey.has(k) ? S.epKey.get(k) : -1; }
 function initials(g) {
   if (g.a) return '?';
   const s = g.dn.replace(/\(.*?\)|（.*?）/g, '').trim();
@@ -1567,7 +1569,7 @@ function pDebate(d) {
     <div class="sheet q-side"><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">${verdictPill(d)}<span class="mono muted" style="font-size:12.5px">${plural(d.nv, 'voice')} · ${plural(d.npos, 'position')}</span></div>
       <span class="lab">Average position</span>${avgRow('Chinese shows', d.avg.cn)}${avgRow('English shows', d.avg.us)}${avgRow('Notable nine', d.avg.notable)}
       <div class="strip-ends"><span>${E(d.axis[0])}</span><span>${E(d.axis[1])}</span></div></div></section>
-  <section class="sheet"><div class="blk-head"><div><h2>Where everyone stands</h2><p>Each mark is one person's latest position. Hover to read their reasoning; click to open their profile. Letters mark the stances below.</p></div></div>
+  <section class="sheet"><div class="blk-head"><div><h2>Where everyone stands</h2><p>Each mark is one person's latest position. Hover to read their reasoning; click to open the interview it came from. Letters mark the stances below.</p></div></div>
     <div class="spec-wrap"><div class="bigspec" style="height:${H}px"><span class="rail2" style="top:${H - 8}px"></span>
       ${d.stances.map(s => `<span class="tick" style="left:${s.pos}%;top:${H - 14}px;height:12px"><span>${E(s.key)}</span></span>`).join('')}
       ${pts.map(p => { const g = C.guests[p.gi]; return `<button type="button" class="pt mk ${p.sh}" style="left:${p.pos}%;top:${H - 16 - p.row * 15}px" data-tip="${p.gi}|${p.pos}" aria-label="${E(g.dn)}, position ${p.pos}" data-href="person-${g.i}"></button>`; }).join('')}
@@ -1591,13 +1593,19 @@ document.addEventListener('mouseover', ev => {
   if (!p) { tip.classList.remove('on'); return; }
   const m = /^#debate-(.+)$/.exec(location.hash); const d = m && C.debates.find(x => x.id === m[1]); if (!d) return;
   const [gi] = p.dataset.tip.split('|').map(Number), x = d.latest.find(y => y.gi === gi), g = C.guests[gi];
-  tip.innerHTML = `<b>${E(g.dn)}</b><span class="mono muted" style="font-size:11.5px">${E(d.st.get(x.key)?.label || '')} · ${dMon(x.month + '-01')}</span><br>${E(x.note)}`;
+  const ei = x.cid ? epOfClaim(x.cid) : -1, ep = ei >= 0 ? C.eps[ei] : null;
+  tip.innerHTML = `<b>${E(g.dn)}</b><span class="mono muted" style="font-size:11.5px">${E(d.st.get(x.key)?.label || '')} · ${dMon(x.month + '-01')}</span><br>${E(x.note)}${ep ? `<span class="mono muted" style="display:block;margin-top:7px;font-size:11px">From: ${E(ep.t.length > 64 ? ep.t.slice(0, 62) + '…' : ep.t)}</span>` : ''}`;
   const r = p.getBoundingClientRect();
   tip.style.left = Math.min(window.innerWidth - 296, Math.max(8, r.left - 130)) + 'px';
   tip.style.top = (r.top > 180 ? r.top - tip.offsetHeight - 10 : r.bottom + 10) + 'px';
   tip.classList.add('on');
 });
-document.addEventListener('click', ev => { const p = ev.target.closest('.pt[data-href]'); if (p) go(p.dataset.href); });
+// a mark opens the person's page at the interview that claim came from, with the claim highlighted
+document.addEventListener('click', ev => { const p = ev.target.closest('.pt[data-href]'); if (!p) return;
+  const m = /^#debate-(.+)$/.exec(location.hash), d = m && C.debates.find(x => x.id === m[1]);
+  const [gi] = p.dataset.tip.split('|').map(Number), x = d && d.latest.find(y => y.gi === gi), ei = x && x.cid ? epOfClaim(x.cid) : -1;
+  if (ei >= 0) S.open = { ei, cid: x.cid };
+  go(p.dataset.href); });
 
 /* ---------- futures ---------- */
 function sectorBoard() {
